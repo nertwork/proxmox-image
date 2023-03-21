@@ -1,6 +1,4 @@
 #!/usr/bin/env bash
-# Argument = -t test -r server -p password -v
-
 usage()
 {
 cat << EOF
