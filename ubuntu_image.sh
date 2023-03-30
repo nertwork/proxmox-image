@@ -72,7 +72,7 @@ fi
 cd /tmp
 rm /tmp/${RELEASE}-server-cloudimg-amd64.* || true
 
-wget https://cloud-images.ubuntu.com/${RELEASE}/current/${RELEASE}-server-cloudimg-amd64.img
+wget -q https://cloud-images.ubuntu.com/${RELEASE}/current/${RELEASE}-server-cloudimg-amd64.img
 
 # Install libguestfs-tools on Proxmox server.
 apt-get install libguestfs-tools
