@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+export PATH="/usr/sbin:$PATH"
 usage()
 {
 cat << EOF
@@ -79,7 +80,7 @@ apt-get install libguestfs-tools
 # Install qemu-guest-agent on Ubuntu image.
 virt-customize -a ${RELEASE}-server-cloudimg-amd64.img --install qemu-guest-agent
 # Enable password authentication in the template. Obviously, not recommended for except for testing.
-virt-customize -a ${RELEASE}-server-cloudimg-amd64.img --run-command "sed -i 's/.*PasswordAuthentication.*/PasswordAuthentication yes/g' /etc/ssh/sshd_config"
+virt-customize -a ${RELEASE}-server-cloudimg-amd64.img --run-command "sed -i 's/.*PasswordAuthentication.*/PasswordAuthentication yes/g' /etc/ssh/sshd_config" || true
 
 #Create Proxmox VM from Ubuntu Cloud Image
 # Set environment variables. Change these as necessary.
@@ -105,10 +106,10 @@ qm template $VM_ID
 
 if [[ ! -z $VM_ID_SECONDARY ]]
 then
-        ssh -t $REMOTE_HOST qm destroy $VM_ID_SECONDARY
+        ssh -tt $REMOTE_HOST qm destroy $VM_ID_SECONDARY
         qm clone $VM_ID $VM_ID_SECONDARY --full --name $VM_NAME
         qm migrate $VM_ID_SECONDARY $REMOTE_HOST
-        ssh -t $REMOTE_HOST qm template $VM_ID_SECONDARY
+        ssh -tt $REMOTE_HOST qm template $VM_ID_SECONDARY
 fi
 
 #Clean Up
