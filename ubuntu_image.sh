@@ -70,6 +70,7 @@ fi
 #Install qemu-guest-agent on Ubuntu Cloud Image
 #This step will install qemu-guest-agent on the Ubuntu cloud image via virt-customize. The libguestfs-tools package must be installed on the system where the ubuntu cloudimg will be modified.
 cd /tmp
+rm /tmp/${RELEASE}-server-cloudimg-amd64.*
 
 wget https://cloud-images.ubuntu.com/${RELEASE}/current/${RELEASE}-server-cloudimg-amd64.img
 
