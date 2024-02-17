@@ -93,6 +93,7 @@ qm destroy $VM_ID
 qm create $VM_ID --memory 2048 --net0 virtio,bridge=vmbr0
 qm importdisk $VM_ID ${RELEASE}-server-cloudimg-amd64.img $STORAGE_POOL
 qm set $VM_ID --scsihw virtio-scsi-pci --scsi0 $STORAGE_POOL:vm-$VM_ID-disk-0
+qm set $VM_ID --scsihw virtio-scsi-pci --ide2 $STORAGE_POOL:vm-$VM_ID-cloudinit,media=cdrom
 qm set $VM_ID --agent enabled=1,fstrim_cloned_disks=1
 qm set $VM_ID --name $VM_NAME
 
