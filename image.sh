@@ -76,11 +76,19 @@ case $RELEASE in
         VERSION=${RELEASE#ubuntu-}  # remove "ubuntu-" from the start of $RELEASE
         wget -q https://cloud-images.ubuntu.com/${VERSION}/current/${VERSION}-server-cloudimg-amd64.img
         IMAGE_NAME="${VERSION}-server-cloudimg-amd64.img"
+
+        # Install qemu-guest-agent on the cloud image
+        virt-customize -a ${IMAGE_NAME} --install qemu-guest-agent
         ;;
     rocky*)
         VERSION=${RELEASE#rocky}  # remove "rocky" from the start of $RELEASE
         wget -q https://dl.rockylinux.org/pub/rocky/${VERSION}/images/x86_64/Rocky-${VERSION}-GenericCloud-Base.latest.x86_64.qcow2
         IMAGE_NAME="Rocky-${VERSION}-GenericCloud-Base.latest.x86_64.qcow2"
+
+        # Install qemu-guest-agent on the cloud image
+        virt-customize -a ${IMAGE_NAME} --run-command "yum remove -y qemu-guest-agent"
+        virt-customize -a ${IMAGE_NAME} --run-command "yum install -y qemu-guest-agent"
+        virt-customize -a ${IMAGE_NAME} --run-command "systemctl enable qemu-guest-agent"
         ;;
     *)
         echo "Unsupported release: $RELEASE"
@@ -88,8 +96,6 @@ case $RELEASE in
         ;;
 esac
 
-# Install qemu-guest-agent on the cloud image
-virt-customize -a ${IMAGE_NAME} --install qemu-guest-agent
 
 # Enable password authentication in the template
 virt-customize -a ${IMAGE_NAME} --run-command "sed -i 's/.*PasswordAuthentication.*/PasswordAuthentication yes/g' /etc/ssh/sshd_config" || true
