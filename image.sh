@@ -72,23 +72,34 @@ cd /tmp
 rm -f /tmp/*.img /tmp/*.qcow2 || true
 
 case $RELEASE in
+
     ubuntu-*)
         VERSION=${RELEASE#ubuntu-}  # remove "ubuntu-" from the start of $RELEASE
         wget -q https://cloud-images.ubuntu.com/${VERSION}/current/${VERSION}-server-cloudimg-amd64.img
         IMAGE_NAME="${VERSION}-server-cloudimg-amd64.img"
 
         # Install qemu-guest-agent on the cloud image
-        virt-customize -a ${IMAGE_NAME} --install qemu-guest-agent
+        virt-customize -a ${IMAGE_NAME} --install qemu-guest-agent \
+                --run-command "systemctl enable qemu-guest-agent" \
+                --run-command "systemctl start qemu-guest-agent" \
+                --run-command "mkdir -p /etc/cloud/cloud.cfg.d" \
+                --run-command "echo -e 'datasource_list: [ NoCloud, None ]\npackage_update: false\npackage_upgrade: false\ncloud_final_modules:\n  - package-update-upgrade-install: {update: false, upgrade: false}\nruncmd:\n  - systemctl start qemu-guest-agent' > /etc/cloud/cloud.cfg.d/99-disable-updates.cfg"
         ;;
+
     rocky*)
         VERSION=${RELEASE#rocky}  # remove "rocky" from the start of $RELEASE
-        wget -q https://dl.rockylinux.org/pub/rocky/${VERSION}/images/x86_64/Rocky-${VERSION}-GenericCloud-Base.latest.x86_64.qcow2
-        IMAGE_NAME="Rocky-${VERSION}-GenericCloud-Base.latest.x86_64.qcow2"
+        wget -q https://dl.rockylinux.org/pub/rocky/${VERSION}/images/x86_64/Rocky-${VERSION}-GenericCloud.latest.x86_64.qcow2
+        IMAGE_NAME="Rocky-${VERSION}-GenericCloud.latest.x86_64.qcow2"
 
         # Install qemu-guest-agent on the cloud image
-        virt-customize -a ${IMAGE_NAME} --run-command "yum remove -y qemu-guest-agent"
-        virt-customize -a ${IMAGE_NAME} --run-command "yum install -y qemu-guest-agent"
-        virt-customize -a ${IMAGE_NAME} --run-command "systemctl enable qemu-guest-agent"
+        virt-customize -a ${IMAGE_NAME} --run-command "yum remove -y qemu-guest-agent || true" \
+               --run-command "yum install -y qemu-guest-agent" \
+               --run-command "systemctl enable qemu-guest-agent" \
+               --run-command "restorecon -R -v /usr/bin/qemu-ga" \
+               --run-command "sed -i 's/SELINUX=enforcing/SELINUX=permissive/' /etc/selinux/config" \
+               --run-command "mkdir -p /etc/cloud/cloud.cfg.d" \
+               --run-command "echo -e 'datasource_list: [ NoCloud, None ]\npackage_update: false\npackage_upgrade: false\ncloud_final_modules:\n  - package-update-upgrade-install: {update: false, upgrade: false}\nruncmd:\n  - systemctl start qemu-guest-agent' > /etc/cloud/cloud.cfg.d/99-disable-updates.cfg"
+
         ;;
     *)
         echo "Unsupported release: $RELEASE"
